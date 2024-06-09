@@ -108,5 +108,36 @@ namespace Api.Controllers
 
             return Ok(note);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllNotes()
+        {
+            var notes = await _context.Notes.ToListAsync();
+            var getNoteDtos = notes.Select(note => new GetNoteDTO
+            {
+                Id = note.Id,
+                Author = note.Author,
+                CreationDate = note.CreationDate,
+                Name = note.Name,
+                Content = note.Content
+            }).ToList();
+
+            return Ok(getNoteDtos);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteNoteById(string id)
+        {
+            var note = await _context.Notes.FindAsync(id);
+            if (note == null)
+            {
+                return NotFound();
+            }
+
+            _context.Notes.Remove(note);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
