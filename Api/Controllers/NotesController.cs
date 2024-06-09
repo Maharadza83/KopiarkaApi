@@ -3,6 +3,7 @@ using Api.Model.Entities.Note;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Logging;
 
 namespace Api.Controllers
 {
@@ -11,10 +12,12 @@ namespace Api.Controllers
     public class NotesController : ControllerBase
     {
         private readonly NoteContext _context;
+        private readonly ILogger<NotesController> _logger;
 
-        public NotesController(NoteContext context)
+        public NotesController(NoteContext context, ILogger<NotesController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -43,12 +46,11 @@ namespace Api.Controllers
                                  ?? "Anonym";
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Token is invalid or couldn't be parsed, keep author as "Anonym"
+                    _logger.LogError(ex, "Error parsing JWT token");
                 }
             }
-
 
             var note = new Note
             {
@@ -59,8 +61,16 @@ namespace Api.Controllers
                 Content = addNoteDto.Content
             };
 
-            _context.Notes.Add(note);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Notes.Add(note);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving note to the database");
+                return StatusCode(500, "Internal server error");
+            }
 
             return Ok(note);
         }
@@ -68,7 +78,17 @@ namespace Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetNoteById(string id)
         {
-            var note = await _context.Notes.FindAsync(id);
+            Note note;
+            try
+            {
+                note = await _context.Notes.FindAsync(id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving note from the database");
+                return StatusCode(500, "Internal server error");
+            }
+
             if (note == null)
             {
                 return NotFound();
@@ -94,17 +114,26 @@ namespace Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            var note = await _context.Notes.FindAsync(id);
-            if (note == null)
+            Note note;
+            try
             {
-                return NotFound();
+                note = await _context.Notes.FindAsync(id);
+                if (note == null)
+                {
+                    return NotFound();
+                }
+
+                note.Name = updateNoteDto.Name;
+                note.Content = updateNoteDto.Content;
+
+                _context.Notes.Update(note);
+                await _context.SaveChangesAsync();
             }
-
-            note.Name = updateNoteDto.Name;
-            note.Content = updateNoteDto.Content;
-
-            _context.Notes.Update(note);
-            await _context.SaveChangesAsync();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating note in the database");
+                return StatusCode(500, "Internal server error");
+            }
 
             return Ok(note);
         }
@@ -112,7 +141,17 @@ namespace Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllNotes()
         {
-            var notes = await _context.Notes.ToListAsync();
+            List<Note> notes;
+            try
+            {
+                notes = await _context.Notes.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving notes from the database");
+                return StatusCode(500, "Internal server error");
+            }
+
             var getNoteDtos = notes.Select(note => new GetNoteDTO
             {
                 Id = note.Id,
@@ -128,14 +167,23 @@ namespace Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNoteById(string id)
         {
-            var note = await _context.Notes.FindAsync(id);
-            if (note == null)
+            Note note;
+            try
             {
-                return NotFound();
-            }
+                note = await _context.Notes.FindAsync(id);
+                if (note == null)
+                {
+                    return NotFound();
+                }
 
-            _context.Notes.Remove(note);
-            await _context.SaveChangesAsync();
+                _context.Notes.Remove(note);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting note from the database");
+                return StatusCode(500, "Internal server error");
+            }
 
             return NoContent();
         }
