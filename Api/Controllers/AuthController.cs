@@ -74,5 +74,28 @@ namespace Api.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+        [HttpGet("self")]
+        public async Task<IActionResult> GetSelf()
+        {
+            // Pobierz nazwê u¿ytkownika z kontekstu uwierzytelniania
+            var username = HttpContext.User.Identity.Name;
+
+            // ZnajdŸ u¿ytkownika w bazie danych
+            var dbUser = await _context.Users.SingleOrDefaultAsync(u => u.Username == username);
+            if (dbUser == null)
+            {
+                return NotFound();
+            }
+
+            // Utwórz obiekt DTO u¿ytkownika
+            var userDto = new UserDto
+            {
+                Username = dbUser.Username
+                // Skopiuj inne w³aœciwoœci, które s¹ potrzebne
+            };
+
+            return Ok(userDto);
+        }
+
     }
 }
