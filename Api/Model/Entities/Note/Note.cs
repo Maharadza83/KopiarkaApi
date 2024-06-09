@@ -2,10 +2,10 @@
 {
     public class Note
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string Category { get; set; }
-
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Author { get; set; } = "System"; // Możesz zmienić na zalogowanego użytkownika
+        public string CreationDate { get; set; } = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        public string Name { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
     }
 }

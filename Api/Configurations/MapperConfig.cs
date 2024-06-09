@@ -1,6 +1,7 @@
-﻿using Api.DTOs.Note;
-using Api.Model.Entities.Note;
+﻿using Api.Model.Entities.Note;
 using AutoMapper;
+using Api.Dtos.Note;
+
 namespace Api.Configurations
 
 {

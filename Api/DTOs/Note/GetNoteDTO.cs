@@ -1,7 +1,7 @@
-﻿namespace Api.DTOs.Note
+﻿namespace Api.Dtos.Note
 {
     public class GetNoteDTO : BaseNoteDTO
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
     }
 }

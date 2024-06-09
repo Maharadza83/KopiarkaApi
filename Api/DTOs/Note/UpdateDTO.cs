@@ -1,7 +1,9 @@
-﻿namespace Api.DTOs.Note
+﻿namespace Api.Dtos.Note
 {
-    public class UpdateNoteDTO : BaseNoteDTO
+    public class UpdateNoteDTO : AddNoteDTO
     {
+
+
 
     }
 }

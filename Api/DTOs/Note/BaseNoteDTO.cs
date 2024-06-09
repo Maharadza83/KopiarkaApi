@@ -1,12 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Api.DTOs.Note
+﻿namespace Api.Dtos.Note
 {
-    public abstract class BaseNoteDTO
-    
+    public class BaseNoteDTO
     {
+        public string Author { get; set; }
+        public string CreationDate { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }
-        public string Category { get; set; }
+        public string Content { get; set; }
     }
 }

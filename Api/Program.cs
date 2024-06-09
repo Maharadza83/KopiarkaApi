@@ -1,12 +1,9 @@
-using Api.Configurations;
 using Api.Model.Entities.Note;
 using Api.Model.Entities.User;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,9 +16,9 @@ builder.Services.AddDbContext<NoteContext>(options =>
     options.UseSqlServer(connectionString, sqlServerOptions =>
     {
         sqlServerOptions.EnableRetryOnFailure(
-            maxRetryCount: 5, // Maksymalna liczba ponowieñ
-            maxRetryDelay: TimeSpan.FromSeconds(30), // Maksymalne opóŸnienie miêdzy ponowieniami
-            errorNumbersToAdd: null); // Mo¿esz dodaæ specyficzne numery b³êdów SQL, które maj¹ byæ objête retry policy
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
     });
 });
 
@@ -63,7 +60,6 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Api", Version = "v1" });
 
-    // Dodanie konfiguracji JWT do Swaggera
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
