@@ -1,5 +1,7 @@
-﻿public class UserDto
+﻿namespace Api.DTOs.Note
 {
-    public string Username { get; set; }
-    // Dodaj inne właściwości użytkownika, które chcesz uwzględnić w tokenie
+    public class UpdateNoteDTO : BaseNoteDTO
+    {
+
+    }
 }

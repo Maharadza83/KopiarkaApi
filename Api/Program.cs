@@ -1,3 +1,5 @@
+using Api.Configurations;
+using Api.Model.Entities.Note;
 using Api.Model.Entities.User;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Dodaj serwisy do kontenera.
 var connectionString = builder.Configuration.GetConnectionString("kopiarka");
 
+builder.Services.AddDbContext<NoteContext>(options =>
+{
+    options.UseSqlServer(connectionString, sqlServerOptions =>
+    {
+        sqlServerOptions.EnableRetryOnFailure(
+            maxRetryCount: 5, // Maksymalna liczba ponowieñ
+            maxRetryDelay: TimeSpan.FromSeconds(30), // Maksymalne opóŸnienie miêdzy ponowieniami
+            errorNumbersToAdd: null); // Mo¿esz dodaæ specyficzne numery b³êdów SQL, które maj¹ byæ objête retry policy
+    });
+});
+
 builder.Services.AddDbContext<UserContext>(options =>
 {
     options.UseSqlServer(connectionString, sqlServerOptions =>
@@ -23,6 +36,7 @@ builder.Services.AddDbContext<UserContext>(options =>
     });
 });
 
+// Konfiguracja uwierzytelniania JWT
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -42,8 +56,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Dodaj kontrolery i konfiguracje Swaggera
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -75,6 +89,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Dodaj konfiguracjê CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());

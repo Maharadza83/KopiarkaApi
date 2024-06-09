@@ -26,7 +26,23 @@ namespace Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(User user)
         {
+            // SprawdŸ, czy u¿ytkownik o tej nazwie ju¿ istnieje w bazie danych
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
+            if (existingUser != null)
+            {
+                return Conflict("U¿ytkownik o tej nazwie ju¿ istnieje.");
+            }
+
+            // SprawdŸ, czy has³o ma co najmniej 5 znaków
+            if (user.Password.Length < 5)
+            {
+                return BadRequest("Has³o musi mieæ co najmniej 5 znaków.");
+            }
+
+            // Haszuj has³o
             user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
+            // Dodaj u¿ytkownika do bazy danych
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -74,6 +90,7 @@ namespace Api.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
         [HttpGet("self")]
         public async Task<IActionResult> GetSelf()
         {
@@ -118,6 +135,4 @@ namespace Api.Controllers
             return Ok(new { Username = username });
         }
     }
-
-}
 }

@@ -8,9 +8,9 @@ namespace Api.Configurations
     {
         public MapperConfig()
         {
-            CreateMap<Note, PostNoteDTO>().ReverseMap();
-            CreateMap<Note, GetNoteDTO>().ReverseMap();
-            CreateMap<Note, NoteDTO>().ReverseMap();
+            // CreateMap<Note, PostNoteDTO>().ReverseMap();
+            // CreateMap<Note, GetNoteDTO>().ReverseMap();
+            // CreateMap<Note, NoteDTO>().ReverseMap();
 
         }
     }
