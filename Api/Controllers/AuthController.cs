@@ -94,17 +94,15 @@ namespace Api.Controllers
         [HttpGet("self")]
         public async Task<IActionResult> GetSelf()
         {
-            // Upewnij siê, ¿e token jest przekazywany w nag³ówku autoryzacji
-            var authHeader = Request.Headers["Authorization"].ToString();
+            // Ensure the token is passed in the "Token" header
+            var token = Request.Headers["Token"].ToString();
 
-            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            if (string.IsNullOrEmpty(token))
             {
-                return Unauthorized();
+                return Unauthorized(new { Message = "Missing authorization token" });
             }
 
-            var token = authHeader.Substring("Bearer ".Length).Trim();
-
-            // Wykorzystaj JwtSecurityTokenHandler do walidacji i parsowania tokena
+            // Use JwtSecurityTokenHandler to validate and parse the token
             var handler = new JwtSecurityTokenHandler();
             JwtSecurityToken jwtToken;
 
@@ -114,25 +112,26 @@ namespace Api.Controllers
             }
             catch
             {
-                return Unauthorized();
+                return Unauthorized(new { Message = "Invalid token" });
             }
 
             if (jwtToken == null)
             {
-                return Unauthorized();
+                return Unauthorized(new { Message = "Invalid token" });
             }
 
-            // Wydobycie nazwy u¿ytkownika (zak³adaj¹c, ¿e jest przechowywana w "sub" lub "name" claim)
+            // Extract the username (assuming it's stored in the "sub" or "name" claim)
             var username = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "sub")?.Value
                            ?? jwtToken.Claims.FirstOrDefault(claim => claim.Type == "name")?.Value;
 
             if (string.IsNullOrEmpty(username))
             {
-                return Unauthorized();
+                return Unauthorized(new { Message = "Invalid token claims" });
             }
 
-            // Zwróæ nazwê u¿ytkownika
+            // Return the username
             return Ok(new { Username = username });
+
         }
     }
 }
