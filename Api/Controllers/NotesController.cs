@@ -3,7 +3,6 @@ using Api.Model.Entities.Note;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.Extensions.Logging;
 
 namespace Api.Controllers
 {
@@ -12,12 +11,10 @@ namespace Api.Controllers
     public class NotesController : ControllerBase
     {
         private readonly NoteContext _context;
-        private readonly ILogger<NotesController> _logger;
 
-        public NotesController(NoteContext context, ILogger<NotesController> logger)
+        public NotesController(NoteContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
         [HttpPost]
@@ -46,9 +43,9 @@ namespace Api.Controllers
                                  ?? "Anonym";
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    _logger.LogError(ex, "Error parsing JWT token");
+                    // Token is invalid or couldn't be parsed, keep author as "Anonym"
                 }
             }
 
@@ -61,16 +58,8 @@ namespace Api.Controllers
                 Content = addNoteDto.Content
             };
 
-            try
-            {
-                _context.Notes.Add(note);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error saving note to the database");
-                return StatusCode(500, "Internal server error");
-            }
+            _context.Notes.Add(note);
+            await _context.SaveChangesAsync();
 
             return Ok(note);
         }
@@ -78,17 +67,7 @@ namespace Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetNoteById(string id)
         {
-            Note note;
-            try
-            {
-                note = await _context.Notes.FindAsync(id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving note from the database");
-                return StatusCode(500, "Internal server error");
-            }
-
+            var note = await _context.Notes.FindAsync(id);
             if (note == null)
             {
                 return NotFound();
@@ -114,43 +93,52 @@ namespace Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            Note note;
-            try
+            var note = await _context.Notes.FindAsync(id);
+            if (note == null)
             {
-                note = await _context.Notes.FindAsync(id);
-                if (note == null)
-                {
-                    return NotFound();
-                }
-
-                note.Name = updateNoteDto.Name;
-                note.Content = updateNoteDto.Content;
-
-                _context.Notes.Update(note);
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating note in the database");
-                return StatusCode(500, "Internal server error");
-            }
+
+            note.Name = updateNoteDto.Name;
+            note.Content = updateNoteDto.Content;
+
+            _context.Notes.Update(note);
+            await _context.SaveChangesAsync();
 
             return Ok(note);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllNotes()
+        public async Task<IActionResult> GetAllNotes(int page = 1, int pageSize = 10, string sortBy = "CreationDate", string sortOrder = "asc")
         {
-            List<Note> notes;
-            try
+            var totalCount = await _context.Notes.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            if (page < 1 || page > totalPages)
             {
-                notes = await _context.Notes.ToListAsync();
+                return BadRequest("Invalid page number.");
             }
-            catch (Exception ex)
+
+            IQueryable<Note> notesQuery = _context.Notes;
+
+            switch (sortBy.ToLower())
             {
-                _logger.LogError(ex, "Error retrieving notes from the database");
-                return StatusCode(500, "Internal server error");
+                case "name":
+                    notesQuery = sortOrder.ToLower() == "desc" ? notesQuery.OrderByDescending(n => n.Name) : notesQuery.OrderBy(n => n.Name);
+                    break;
+                case "author":
+                    notesQuery = sortOrder.ToLower() == "desc" ? notesQuery.OrderByDescending(n => n.Author) : notesQuery.OrderBy(n => n.Author);
+                    break;
+                case "creationdate":
+                default:
+                    notesQuery = sortOrder.ToLower() == "desc" ? notesQuery.OrderByDescending(n => n.CreationDate) : notesQuery.OrderBy(n => n.CreationDate);
+                    break;
             }
+
+            var notes = await notesQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             var getNoteDtos = notes.Select(note => new GetNoteDTO
             {
@@ -161,29 +149,29 @@ namespace Api.Controllers
                 Content = note.Content
             }).ToList();
 
-            return Ok(getNoteDtos);
+            var response = new
+            {
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                Page = page,
+                PageSize = pageSize,
+                Notes = getNoteDtos
+            };
+
+            return Ok(response);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNoteById(string id)
         {
-            Note note;
-            try
+            var note = await _context.Notes.FindAsync(id);
+            if (note == null)
             {
-                note = await _context.Notes.FindAsync(id);
-                if (note == null)
-                {
-                    return NotFound();
-                }
+                return NotFound();
+            }
 
-                _context.Notes.Remove(note);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting note from the database");
-                return StatusCode(500, "Internal server error");
-            }
+            _context.Notes.Remove(note);
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
