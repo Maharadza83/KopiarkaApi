@@ -22,7 +22,6 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-      //  public async Task<IActionResult> AddNote([FromForm] NoteWithFileDTO addNoteDto)
         public async Task<IActionResult> AddNote([FromForm] NoteWithFileDTO addNoteDto)
         {
             if (!ModelState.IsValid)
@@ -69,6 +68,11 @@ namespace Api.Controllers
                 {
                     await addNoteDto.FormFile.CopyToAsync(memoryStream);
                     note.FileContent = memoryStream.ToArray();
+
+                    // Pobierz rozszerzenie pliku z jego nazwy
+                    var fileName = addNoteDto.FormFile.FileName;
+                    var fileExtension = Path.GetExtension(fileName);
+                    note.FileExtension = fileExtension;
                 }
             }
 
@@ -176,6 +180,7 @@ namespace Api.Controllers
 
             return Ok(response);
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNoteById(string id)

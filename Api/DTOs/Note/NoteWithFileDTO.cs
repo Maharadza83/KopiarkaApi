@@ -4,6 +4,8 @@ namespace Api.DTOs.Note
 {
     public class NoteWithFileDTO : AddNoteDTO
     {
-        public IFormFile? FormFile { get; set; } 
+        public IFormFile? FormFile { get; set; }
+//        public string FileExtension { get; set; }
+
     }
 }
