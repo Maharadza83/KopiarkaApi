@@ -7,7 +7,6 @@
         public string CreationDate { get; set; } = DateTime.UtcNow.ToString("yyyy-MM-dd");
         public string Name { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-//        public byte[] FileData { get; set; }
- //       public string FileName { get; set; }
+        public byte[] FileContent { get; set; } = Array.Empty<byte>(); 
     }
 }

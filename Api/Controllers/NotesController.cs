@@ -3,6 +3,10 @@ using Api.Model.Entities.Note;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Threading.Tasks;
+using System.IO;
+using Api.DTOs.Note;
 
 namespace Api.Controllers
 {
@@ -16,9 +20,9 @@ namespace Api.Controllers
         {
             _context = context;
         }
-        
+
         [HttpPost]
-        public async Task<IActionResult> AddNote([FromBody] AddNoteDTO addNoteDto)
+        public async Task<IActionResult> AddNote([FromForm] NoteWithFileDTO addNoteDto)
         {
             if (!ModelState.IsValid)
             {
@@ -58,6 +62,15 @@ namespace Api.Controllers
                 Content = addNoteDto.Content
             };
 
+            if (addNoteDto.FormFile != null)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await addNoteDto.FormFile.CopyToAsync(memoryStream);
+                    note.FileContent = memoryStream.ToArray();
+                }
+            }
+
             _context.Notes.Add(note);
             await _context.SaveChangesAsync();
 
@@ -79,7 +92,8 @@ namespace Api.Controllers
                 Author = note.Author,
                 CreationDate = note.CreationDate,
                 Name = note.Name,
-                Content = note.Content
+                Content = note.Content,
+                FileContent = note.FileContent
             };
 
             return Ok(getNoteDto);
@@ -146,7 +160,8 @@ namespace Api.Controllers
                 Author = note.Author,
                 CreationDate = note.CreationDate,
                 Name = note.Name,
-                Content = note.Content
+                Content = note.Content,
+                FileContent = note.FileContent
             }).ToList();
 
             var response = new

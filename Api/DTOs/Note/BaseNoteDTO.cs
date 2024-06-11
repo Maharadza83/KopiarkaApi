@@ -6,5 +6,9 @@
         public string CreationDate { get; set; }
         public string Name { get; set; }
         public string Content { get; set; }
+
+        //public IFormFile? FormFile { get; set; }
+
+        public byte[] FileContent { get; set; }
     }
 }
