@@ -22,6 +22,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
+      //  public async Task<IActionResult> AddNote([FromForm] NoteWithFileDTO addNoteDto)
         public async Task<IActionResult> AddNote([FromForm] NoteWithFileDTO addNoteDto)
         {
             if (!ModelState.IsValid)
