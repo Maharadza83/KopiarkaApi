@@ -98,7 +98,8 @@ namespace Api.Controllers
                 CreationDate = note.CreationDate,
                 Name = note.Name,
                 Content = note.Content,
-                FileContent = note.FileContent
+                FileContent = note.FileContent,
+                FileExtension = note.FileExtension
             };
 
             return Ok(getNoteDto);
@@ -166,7 +167,8 @@ namespace Api.Controllers
                 CreationDate = note.CreationDate,
                 Name = note.Name,
                 Content = note.Content,
-                FileContent = note.FileContent
+                FileContent = note.FileContent,
+                 FileExtension = note.FileExtension
             }).ToList();
 
             var response = new
